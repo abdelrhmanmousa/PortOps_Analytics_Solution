@@ -92,3 +92,55 @@ If the data volume were to scale significantly, I would implement the following 
 - **Incremental Loading:** Move away from "Truncate and Reload." I would use Change Data Capture (CDC) or Delta detection (based on a `LastModified` timestamp) to only process new or changed records.
 
 - **Columnstore Indexing:** I would implement Clustered Columnstore Indexes on the fact tables. This provides massive compression and significantly speeds up the heavy aggregation queries used by Power BI.
+
+
+---
+ 
+## 6. Q&A: Technical Justifications
+ 
+### Data Warehousing
+ 
+**Q: What is the difference between SCD Type 1 and Type 2?**
+ 
+Type 1 overwrites existing data (e.g., `customer_name`), providing only the current view with no historical record of what the value was before. Type 2 tracks history (e.g., `customer_tier`) by creating new rows with effective dates, preserving every version of a record over time. In this project, Type 1 was used for names to keep reports clean, and Type 2 was used for tiers to ensure a customer's performance is attributed to the correct tier they held at the time of the move.
+ 
+**Q: Why use Surrogate Keys?**
+ 
+For two reasons. First, they decouple the warehouse from source system changes — for example, if a `customer_id` changes in the Excel source, the warehouse is unaffected. Second, they are essential for SCD Type 2: since a single `customer_id` can have multiple rows (one per historical version), the Surrogate Key provides a unique identifier for the fact table to link to a specific historical version of that customer.
+ 
+**Q: How is an out-of-range date handled with a bounded `dim_date`?**
+ 
+If a fact row arrives with a date outside the loaded range (1 Apr 2025 – 31 Mar 2026), the SSIS Lookup will fail to find a match. The pipeline is designed to redirect these "No Match" rows to a Default/Unknown member (`ID = -1`). This prevents package failure and keeps the data visible in reports as "Uncategorized Date" for troubleshooting.
+ 
+---
+ 
+### SSIS
+ 
+**Q: Why avoid the SCD Wizard?**
+ 
+The Wizard performs row-by-row updates (RBAR — Row By Agonizing Row), which is extremely slow for large datasets. It also generates complex, hard-to-maintain packages. A manual pattern using Lookups and Conditional Splits is more performant, supports better error logging, and allows bulk-inserting new records rather than processing them one at a time.
+ 
+**Q: How does Automated Row-Count Reconciliation work?**
+ 
+Row Count transformations in the Data Flow populate package variables for Source and Target counts. At the end of the pipeline, an Execute SQL Task compares these counts. If they mismatch, the package logs a `'Failure'` status to `stg.etl_log` and halts the process, ensuring data integrity is never silently compromised.
+ 
+**Q: What is the role of Staging?**
+ 
+Staging acts as both a "buffer" and a "sanitizer." It decouples the ETL from the source file, allowing heavy transformations (such as SCD logic) to be performed within SQL Server rather than directly against the Excel driver — which would be slower and prone to locking and connection errors.
+ 
+---
+ 
+### Power BI
+ 
+**Q: Why is only one active relationship allowed between the same two tables?**
+ 
+Multiple active relationships between the same two tables create ambiguity. If a user filtered by Date, Power BI would not know whether to apply the filter via the "Gate In Date" or "Gate Out Date" path, leading to inconsistent and untrustworthy results. One relationship must be active; the others are kept inactive and activated explicitly inside measures.
+ 
+**Q: What is the difference between `USERELATIONSHIP` and `CROSSFILTER`?**
+ 
+`USERELATIONSHIP` activates a specific inactive relationship for the duration of a single measure calculation — it is the correct tool for handling multiple timestamps (e.g., gate-in vs. gate-out) on the same fact table. `CROSSFILTER` changes the *direction* of an existing relationship's cross-filtering (e.g., making a one-way filter behave like a two-way filter). They solve different problems; `USERELATIONSHIP` is the appropriate choice here.
+ 
+**Q: A KPI is not respecting a Date Slicer — how would you debug this?**
+ 
+Three checks in order: First, verify the measure references the correct column from `dim_date` (not a date column on the fact table directly). Second, confirm the relationship between `dim_date` and the fact table is set to **Active**. Third, inspect the measure definition for filter-overriding functions such as `ALL()` or a `USERELATIONSHIP()` call that may be intentionally or accidentally bypassing the slicer context.
+ 
