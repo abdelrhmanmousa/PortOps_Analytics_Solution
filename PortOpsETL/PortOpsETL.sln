@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.37111.16 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{C9674DCB-5085-4A16-B785-4C70DD1589BD}") = "PortOpsETL", "PortOpsETL\PortOpsETL.dtproj", "{25BF753F-F673-702B-5258-4F6DDEFFAE9E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Development|Default = Development|Default
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{25BF753F-F673-702B-5258-4F6DDEFFAE9E}.Development|Default.ActiveCfg = Development
+		{25BF753F-F673-702B-5258-4F6DDEFFAE9E}.Development|Default.Build.0 = Development
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8C155423-5556-477D-A713-DA9155564FD2}
+	EndGlobalSection
+EndGlobal

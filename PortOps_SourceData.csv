@@ -1,0 +1,18 @@
+Port Operations — Source Data,
+This workbook is the raw operational data source for the Data & Analytics Engineer assessment.,
+,
+Sheet,Description
+ContainerMovements,Fact: each row = one container move (discharge/load/shift). Your main fact table.
+VesselCalls,Fact: each row = one vessel call (arrival + departure).
+GateTransactions,Fact: each row = one truck gate transaction. Contains BOTH gate_in_time and gate_out_time — use these for the Power BI inactive-relationship exercise.
+Customers,Dimension: shipping lines. Includes tier changes over time — implement as SCD Type 2.
+Terminals,Dimension: terminal/yard locations.
+Equipment,Dimension: cranes, RTGs, reach stackers, terminal tractors.
+Shifts,Dimension: operational shift patterns.
+,
+Notes:,
+• Data window:,1 April 2025 – 31 March 2026
+• Dates:,Some date columns are strings, some are real datetimes — handle both in SSIS.
+• Nulls:,Some columns intentionally contain blanks. Document how you handle them.
+• Duplicates:,None are guaranteed — if you find them, treat them as a DQ finding.
+• Customer SCD:,The Customers sheet lists CURRENT attributes. Tier/credit changes are in the 'CustomerHistory' sheet — use that to build your SCD Type 2 dimension.
