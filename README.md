@@ -140,7 +140,7 @@ Multiple active relationships between the same two tables create ambiguity. If a
  
 `USERELATIONSHIP` activates a specific inactive relationship for the duration of a single measure calculation — it is the correct tool for handling multiple timestamps (e.g., gate-in vs. gate-out) on the same fact table. `CROSSFILTER` changes the *direction* of an existing relationship's cross-filtering (e.g., making a one-way filter behave like a two-way filter). They solve different problems; `USERELATIONSHIP` is the appropriate choice here.
  
-**Q: A KPI is not respecting a Date Slicer — how would you debug this?**
+**Q: A KPI is not respecting a Date Slicer — how would i debug this?**
  
 Three checks in order: First, verify the measure references the correct column from `dim_date` (not a date column on the fact table directly). Second, confirm the relationship between `dim_date` and the fact table is set to **Active**. Third, inspect the measure definition for filter-overriding functions such as `ALL()` or a `USERELATIONSHIP()` call that may be intentionally or accidentally bypassing the slicer context.
  
